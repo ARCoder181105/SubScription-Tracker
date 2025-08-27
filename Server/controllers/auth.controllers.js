@@ -2,6 +2,8 @@ import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from 'jsonwebtoken'
+import { sendLoginMail, sendLogOutMail, sendWelcomeMail } from "../utils/mailer.js";
 
 const DEFAULT_AVATAR = "https://icons.veryicon.com/png/o/miscellaneous/rookie-official-icon-gallery/225-default-avatar.png";
 
@@ -64,6 +66,10 @@ export const registerUser = async (req, res, next) => {
 
         const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
+        if (createdUser) {
+            sendWelcomeMail(createdUser.email, createdUser.username)
+        }
+
         return res.status(201)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
@@ -100,6 +106,10 @@ export const loginUser = async (req, res, next) => {
         }
 
         const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
+        if (createdUser) {
+            sendLoginMail(createdUser.email, createdUser.username);
+        }
 
         return res.status(201)
             .cookie("accessToken", accessToken, options)
@@ -175,8 +185,48 @@ export const githubAuthCallback = async (req, res, next) => {
 };
 
 export const getNewAcessToken = async (req, res, next) => {
+    try {
+        const refreshToken = req.cookies?.refreshToken;
 
-}
+        if (!refreshToken) {
+            throw new ApiError(401, "Refresh token missing");
+        }
+
+        // Verify refresh token
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+        const user = await User.findById(decoded._id);
+
+        if (!user || user.refreshToken !== refreshToken) {
+            throw new ApiError(401, "Invalid refresh token");
+        }
+
+        // Generate new tokens
+        const accessToken = user.generateAccessToken();
+        const newRefreshToken = user.generateRefreshToken();
+
+        // Save new refresh token
+        user.refreshToken = newRefreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        const options = { httpOnly: true, secure: true };
+
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    { accessToken, refreshToken: newRefreshToken },
+                    "Access token refreshed successfully"
+                )
+            );
+    } catch (error) {
+        console.error("Refresh token error:", error);
+        next(new ApiError(401, "Could not refresh token, please login again"));
+    }
+};
 
 export const logoutUser = async (req, res, next) => {
     try {
@@ -188,10 +238,15 @@ export const logoutUser = async (req, res, next) => {
         res.clearCookie("accessToken");
         res.clearCookie("refreshToken");
 
+        if (req.user && req.user.email && req.user.username) {
+            sendLogOutMail(req.user.email, req.user.username);
+        }
+
         return res
             .status(200)
-            .json(new ApiResponse(200, {}, "Logged out successfully"));
+            .json(new ApiResponse(200, "Logged out successfully"));
     } catch (error) {
         next(new ApiError(500, "Something went wrong while logging out"));
     }
 };
+

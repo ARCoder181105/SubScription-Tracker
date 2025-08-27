@@ -1,14 +1,17 @@
 import express from 'express'
 import { upload } from '../middlewares/multer.middleware.js';
-import { loginUser, registerUser, googleAuthCallback, githubAuthCallback } from '../controllers/auth.controllers.js';
+import { loginUser, registerUser, googleAuthCallback, githubAuthCallback, getNewAcessToken, logoutUser } from '../controllers/auth.controllers.js';
 import passport from 'passport'
 import { ApiError } from '../utils/ApiError.js';
+import { authenticateJWT } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 
 router.post('/register', upload.single('avatar'), registerUser);
 router.post('/login', loginUser)
+router.get('/refresh',getNewAcessToken)
+router.get('/logout',authenticateJWT,logoutUser);
 
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 router.get("/google/callback", passport.authenticate("google", { failureRedirect: "/api/v1/auth/google/failure" }), googleAuthCallback);

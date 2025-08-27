@@ -1,3 +1,6 @@
+import dotenv from 'dotenv'
+dotenv.config();
+
 import nodemailer from 'nodemailer';
 
 
@@ -9,7 +12,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const sendReminderEmail = async (userEmail, platformName) => {
+export const sendReminderEmail = async (userEmail, platformName) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: userEmail,
@@ -31,8 +34,7 @@ const sendReminderEmail = async (userEmail, platformName) => {
     }
 };
 
-
-const sendWelcomeMail = async (userEmail, username) => {
+export const sendWelcomeMail = async (userEmail, username) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: userEmail,
@@ -54,7 +56,53 @@ const sendWelcomeMail = async (userEmail, username) => {
     }
 }
 
-const sendReminder1Day = async (userEmail, username, platformName) => {
+export const sendLoginMail = async (userEmail, username) => {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: userEmail,
+        subject: 'Login Alert: SubScribe Account Accessed',
+        html: `
+            <h1>Login Notification</h1>
+            <p>Hi ${username},</p>
+            <p>Your SubScribe account was just accessed. If this was you, no action is needed.</p>
+            <p>If you did not log in, please reset your password immediately or contact our support team.</p>
+            <br>
+            <p>-- The SubScribe Team</p>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Welcome mail sent to ${username} on mail: ${userEmail}`);
+    } catch (error) {
+        console.error(`Error sending email to ${userEmail}:`, error);
+    }
+}
+
+export const sendLogOutMail = async (userEmail, username) => {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: userEmail,
+        subject: 'Logout Alert: You have logged out of SubScribe',
+        html: `
+            <h1>Logout Notification</h1>
+            <p>Hi ${username},</p>
+            <p>This is to inform you that you have successfully logged out of your SubScribe account.</p>
+            <p>If this was not you, please secure your account by resetting your password or contacting our support team immediately.</p>
+            <br>
+            <p>-- The SubScribe Team</p>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Welcome mail sent to ${username} on mail: ${userEmail}`);
+    } catch (error) {
+        console.error(`Error sending email to ${userEmail}:`, error);
+    }
+}
+
+export const sendReminder1Day = async (userEmail, username, platformName) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: userEmail,
@@ -77,7 +125,7 @@ const sendReminder1Day = async (userEmail, username, platformName) => {
     }
 };
 
-const sendReminderToday = async (userEmail, username, platformName) => {
+export const sendReminderToday = async (userEmail, username, platformName) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: userEmail,
@@ -100,4 +148,3 @@ const sendReminderToday = async (userEmail, username, platformName) => {
     }
 };
 
-export { sendReminderEmail, sendWelcomeMail, sendReminder1Day, sendReminderToday };
