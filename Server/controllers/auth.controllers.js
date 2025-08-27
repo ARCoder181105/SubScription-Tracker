@@ -24,7 +24,6 @@ const generateAccessAndRefereshTokens = async (userId) => {
     }
 }
 
-
 export const registerUser = async (req, res, next) => {
     try {
         console.log(req.body);
@@ -76,6 +75,123 @@ export const registerUser = async (req, res, next) => {
 
     } catch (error) {
         console.error("Register error:", error);
-        next(error);
+        next(new ApiError(500, "Something went wrong while registering", error));
+    }
+};
+
+export const loginUser = async (req, res, next) => {
+    // console.log(req);
+    const { username, password } = req.body;
+    try {
+
+        const user = await User.findOne({ username: username });
+
+        const isMatch = user.isPasswordCorrect(password)
+
+        if (!isMatch) {
+            throw new ApiError(401, "Invalid Credentials");
+        }
+
+        const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id);
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+
+        const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
+        return res.status(201)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(201, {
+                    user: createdUser, accessToken, refreshToken
+                }, "User Logged In successfully")
+            );
+
+
+    } catch (error) {
+        console.error("Register error:", error);
+        next(new ApiError(500, "Something went wrong while login", error));
+    }
+
+}
+
+export const googleAuthCallback = async (req, res, next) => {
+    try {
+        const user = req.user; // already from DB
+
+        if (!user) throw new ApiError(400, "Google authentication failed");
+
+        const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id);
+
+        const options = { httpOnly: true, secure: true };
+
+        const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    { user: createdUser, accessToken, refreshToken },
+                    "Google login successful"
+                )
+            );
+    } catch (error) {
+        console.error("Google Auth Callback Error:", error);
+        next(new ApiError(500, "Something went wrong while Google login", error));
+    }
+};
+
+export const githubAuthCallback = async (req, res, next) => {
+    try {
+        const user = req.user; // already from DB
+
+        if (!user) throw new ApiError(400, "GitHub authentication failed");
+
+        const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id);
+
+        const options = { httpOnly: true, secure: true };
+
+        const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    { user: createdUser, accessToken, refreshToken },
+                    "GitHub login successful"
+                )
+            );
+    } catch (error) {
+        console.error("GitHub callback error:", error);
+        next(new ApiError(500, "Something went wrong while github login", error));
+    }
+};
+
+export const getNewAcessToken = async (req, res, next) => {
+
+}
+
+export const logoutUser = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+
+        await User.findByIdAndUpdate(userId, { refreshToken: null });
+
+        // Clear cookies
+        res.clearCookie("accessToken");
+        res.clearCookie("refreshToken");
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "Logged out successfully"));
+    } catch (error) {
+        next(new ApiError(500, "Something went wrong while logging out"));
     }
 };

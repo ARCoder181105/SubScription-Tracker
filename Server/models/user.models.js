@@ -25,12 +25,15 @@ const userSchema = new mongoose.Schema({
     },
     avatar: {
         type: String,
-        required: false, 
+        required: false,
     },
     refreshToken: {
         type: String
     },
     googleId: {
+        type: String
+    },
+    githubId: {
         type: String
     }
 }, {

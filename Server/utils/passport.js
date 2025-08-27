@@ -6,13 +6,15 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { User } from "../models/user.models.js";
 
+const DEFAULT_AVATAR = "https://icons.veryicon.com/png/o/miscellaneous/rookie-official-icon-gallery/225-default-avatar.png";
+
 // --- Google Strategy ---
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:6969/auth/google/callback",
+      callbackURL: "http://localhost:6969/api/v1/auth/google/callback",
     },
     async (_, __, profile, done) => {
       try {
@@ -21,7 +23,7 @@ passport.use(
           user = await User.create({
             googleId: profile.id,
             email: profile.emails[0].value,
-            username: profile.displayName.replace(/\s+/g, '').toLowerCase(),
+            username: profile.displayName,
             avatar: profile.photos[0].value,
           });
         }
@@ -40,22 +42,37 @@ passport.use(
     {
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: "http://localhost:6969/auth/github/callback",
+      callbackURL: "/api/v1/auth/github/callback",
+      scope: ["user:email"],
     },
-    async (_, __, profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       try {
+        let email = null;
+
+        // Some users hide emails -> GitHub returns [] or undefined
+        if (profile.emails && profile.emails.length > 0) {
+          email = profile.emails[0].value;
+        } else {
+          // fallback -> use GitHub username as pseudo-email
+          email = `${profile.username}@github.local`;
+        }
+
+        const avatar = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : DEFAULT_AVATAR;
+
         let user = await User.findOne({ githubId: profile.id });
+
         if (!user) {
           user = await User.create({
-            githubId: profile.id,
-            email: profile.emails[0].value,
             username: profile.username,
-            avatar: profile.photos?.[0]?.value,
+            email,
+            avatar,
+            githubId: profile.id,
           });
         }
-        done(null, user);
-      } catch (err) {
-        done(err, null);
+
+        return done(null, user);
+      } catch (error) {
+        return done(error, null);
       }
     }
   )

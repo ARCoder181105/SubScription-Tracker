@@ -38,7 +38,7 @@ app.use('/api/v1/auth',authRoutes);
 
 
 
-console.log("Remember to remove the credetial in passportjs")
+// console.log("Remember to remove the credetial in passportjs")
 
 // Start server after DB connects
 connectDB()
