@@ -249,4 +249,5 @@ export const logoutUser = async (req, res, next) => {
         next(new ApiError(500, "Something went wrong while logging out"));
     }
 };
+//future aspects is to implement forgot password functionality we can send a special link to email to reset the password
 
