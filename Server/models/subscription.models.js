@@ -50,7 +50,7 @@ const subscriptionSchema = new mongoose.Schema({
     },
     nextBillingDate: {
         type: Date,
-        required: true,
+        required: false,
         index: true // needed for cron reminders
     },
     status: {
@@ -61,7 +61,7 @@ const subscriptionSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ['Entertainment', 'Productivity', 'Education', 'Finance', 'Other'],
+        required: true,
         default: 'Other'
     },
     reminderDaysBefore: {

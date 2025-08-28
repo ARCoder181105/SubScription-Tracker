@@ -30,7 +30,7 @@ export const getUserSubscriptions = async (req, res, next) => {
 export const getUserSubscriptionById = async (req, res, next) => {
     try {
         const { _id: userId } = req.user;
-        const { subscriptionId } = req.params;
+        const { id: subscriptionId } = req.params;
 
         if (!subscriptionId || !userId) {
             throw new ApiError(400, "Missing subscriptionId or userId");
@@ -43,7 +43,7 @@ export const getUserSubscriptionById = async (req, res, next) => {
             throw new ApiError(404, "Subscription not found");
         }
 
-        if (subscription.userId.toString !== userId) {
+        if (subscription.userId.toString !== userId.toString()) {
             throw new ApiError(404, "Invalid acesss");
         }
 
@@ -118,7 +118,7 @@ export const addUserSubscriptions = async (req, res, next) => {
 export const editUserSubscription = async (req, res, next) => {
     try {
 
-        const { subscriptionId } = req.params;
+        const { id: subscriptionId } = req.params;
         const { _id: userId } = req.user;
 
         const updateData = req.body;
@@ -130,7 +130,7 @@ export const editUserSubscription = async (req, res, next) => {
         }
 
 
-        if (subscription.userId.toString() !== userId) {
+        if (subscription.userId.toString() !== userId.toString()) {
             throw new ApiError(403, 'Forbidden: You do not have permission to edit this subscription.')
         }
 
@@ -156,7 +156,7 @@ export const editUserSubscription = async (req, res, next) => {
 export const deleteUserSubscription = async (req, res, next) => {
     try {
         const { _id: userId } = req.user;
-        const { subscriptionId } = req.params;
+        const { id: subscriptionId } = req.params;
 
         if (!subscriptionId || !userId) {
             throw new ApiError(400, "Missing subscriptionId or userId");
@@ -168,7 +168,7 @@ export const deleteUserSubscription = async (req, res, next) => {
             throw new ApiError(404, "Subscription not found");
         }
 
-        if (subscription.userId.toString() !== userId) {
+        if (subscription.userId.toString() !== userId.toString()) {
             throw new ApiError(403, "Forbidden: You do not have permission to delete this subscription.");
         }
 
@@ -185,7 +185,7 @@ export const deleteUserSubscription = async (req, res, next) => {
 
 export const markSubsCriptionAsDone = async (req, res, next) => {
     try {
-        const { subscriptionId, paidDate } = req.params;
+        const { id: subscriptionId, paidDate } = req.params;
         const { _id: userId } = req.user;
 
         if (!subscriptionId || !userId) {
