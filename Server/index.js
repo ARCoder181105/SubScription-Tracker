@@ -7,8 +7,9 @@ import cookieParser from 'cookie-parser';
 import { connectDB } from './db/connectDB.js';
 import morgan from 'morgan'
 import session from "express-session";
-import authRoutes from './routes/auth.routes.js'
 import passport from "./utils/passport.js"
+import authRoutes from './routes/auth.routes.js'
+import userRoutes from './routes/user.routes.js'
 
 
 
@@ -35,10 +36,10 @@ app.use(passport.session());
 
 // Routes
 app.use('/api/v1/auth',authRoutes);
+app.use('/api/v1/user',userRoutes);
 
 
 
-// console.log("Remember to remove the credetial in passportjs")
 
 // Start server after DB connects
 connectDB()
