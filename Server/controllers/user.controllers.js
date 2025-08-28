@@ -161,7 +161,7 @@ export const deleteUserSubscription = async (req, res, next) => {
     }
 };
 
-export const markSubscriptionAsDone = async (req, res, next) => {
+export const markSubsCriptionAsDone = async (req, res, next) => {
     try {
         const { id: subscriptionId } = req.params;
         const { _id: userId } = req.user;
