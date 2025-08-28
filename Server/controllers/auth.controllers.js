@@ -81,7 +81,7 @@ export const registerUser = async (req, res, next) => {
 
     } catch (error) {
         console.error("Register error:", error);
-        next(new ApiError(500, "Something went wrong while registering", error));
+        next(new ApiError(500, "Something went wrong while registering"));
     }
 };
 
@@ -123,7 +123,7 @@ export const loginUser = async (req, res, next) => {
 
     } catch (error) {
         console.error("Register error:", error);
-        next(new ApiError(500, "Something went wrong while login", error));
+        next(new ApiError(500, "Something went wrong while login"));
     }
 
 }
@@ -152,7 +152,7 @@ export const googleAuthCallback = async (req, res, next) => {
             );
     } catch (error) {
         console.error("Google Auth Callback Error:", error);
-        next(new ApiError(500, "Something went wrong while Google login", error));
+        next(new ApiError(500, "Something went wrong while Google login"));
     }
 };
 
@@ -180,7 +180,7 @@ export const githubAuthCallback = async (req, res, next) => {
             );
     } catch (error) {
         console.error("GitHub callback error:", error);
-        next(new ApiError(500, "Something went wrong while github login", error));
+        next(new ApiError(500, "Something went wrong while github login"));
     }
 };
 
