@@ -1,12 +1,19 @@
 import express from 'express'
-import {ApiError} from '../utils/ApiError.js'
-import {ApiResponse} from '../utils/ApiResponse.js'
+import { ApiError } from '../utils/ApiError.js'
+import { ApiResponse } from '../utils/ApiResponse.js'
 import { authenticateJWT } from '../middlewares/auth.middleware.js';
-import { getUserSubscriptions } from '../controllers/user.controllers.js';
+import { addUserSubscriptions, deleteUserSubscription, editUserSubscription, getUserSubscriptionById, getUserSubscriptions, markSubsCriptionAsDone } from '../controllers/user.controllers.js';
 
 const router = express.Router();
 
-router.get('/home',authenticateJWT,getUserSubscriptions);
+router.get('/home', authenticateJWT, getUserSubscriptions);
+router.get('/subs/:id', authenticateJWT, getUserSubscriptionById);
 
+router.patch('/subs/:id', authenticateJWT, editUserSubscription);
+router.patch('/subs/:id/done', authenticateJWT, markSubsCriptionAsDone);
+
+router.post('/subs', authenticateJWT, addUserSubscriptions);
+
+router.delete('/subs/:id', authenticateJWT, deleteUserSubscription);
 
 export default router;

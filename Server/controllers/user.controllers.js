@@ -18,8 +18,12 @@ export const getUserSubscriptions = async (req, res, next) => {
             .status(200)
             .json(new ApiResponse(200, subscriptions, "Subscriptions fetched successfully"));
     } catch (error) {
-        console.log("Unable to update subscrition list", error);
-        next(new ApiError(404, "Unable to update subscrition list"));
+        console.log("Unable to update subscription list", error);
+        if (error instanceof ApiError) {
+            next(error);
+        } else {
+            next(new ApiError(500, "An unexpected error occurred while fetching subscriptions"));
+        }
     }
 };
 
