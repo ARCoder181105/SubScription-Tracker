@@ -4,7 +4,7 @@ import { Subscription } from '../models/subscription.models.js'
 
 export const getUserSubscriptions = async (req, res, next) => {
     try {
-        const userId = req.user._id; // comes from authenticateJWT
+        const userId = req.user._id;
 
         const subscriptions = await Subscription.find({ userId })
             .sort({ nextBillingDate: 1 })
@@ -18,12 +18,8 @@ export const getUserSubscriptions = async (req, res, next) => {
             .status(200)
             .json(new ApiResponse(200, subscriptions, "Subscriptions fetched successfully"));
     } catch (error) {
-        console.log("Unable to update subscription list", error);
-        if (error instanceof ApiError) {
-            next(error);
-        } else {
-            next(new ApiError(500, "An unexpected error occurred while fetching subscriptions"));
-        }
+        console.error("Unable to fetch subscription list", error);
+        next(error instanceof ApiError ? error : new ApiError(500, "Unexpected error"));
     }
 };
 
@@ -38,34 +34,30 @@ export const getUserSubscriptionById = async (req, res, next) => {
 
         const subscription = await Subscription.findById(subscriptionId);
 
-
         if (!subscription) {
             throw new ApiError(404, "Subscription not found");
         }
 
-        if (subscription.userId.toString !== userId.toString()) {
-            throw new ApiError(404, "Invalid acesss");
+        if (subscription.userId.toString() !== userId.toString()) {
+            throw new ApiError(403, "Forbidden: You cannot access this subscription");
         }
 
-        res.status(200)
-            .json(
-                new ApiResponse(200, { subscription: subscription }, "Subscription fetched successfully")
-            );
+        res.status(200).json(
+            new ApiResponse(200, { subscription }, "Subscription fetched successfully")
+        );
     } catch (error) {
-        console.log("Error in fetching the data", error);
-        next(new ApiError(404, "Error in fetching the data"));
+        console.error("Error in fetching subscription", error);
+        next(error instanceof ApiError ? error : new ApiError(500, "Unexpected error"));
     }
-
-}
+};
 
 export const addUserSubscriptions = async (req, res, next) => {
     try {
-
         const { _id: userId } = req.user;
 
         const {
             platformName,
-            price, // Expect a price object { amount, currency }
+            price,
             billingCycle,
             startDate,
             status,
@@ -73,9 +65,8 @@ export const addUserSubscriptions = async (req, res, next) => {
             reminderDaysBefore,
         } = req.body;
 
-        // Basic validation to ensure required fields are present
         if (!platformName || !price || !billingCycle || !startDate) {
-            throw new ApiError(400, "Required Fields not filled");
+            throw new ApiError(400, "Required fields missing");
         }
 
         const parsedStartDate = new Date(startDate);
@@ -83,7 +74,6 @@ export const addUserSubscriptions = async (req, res, next) => {
             throw new ApiError(400, "Invalid startDate");
         }
 
-        // Create a new subscription instance
         const newSubscription = new Subscription({
             userId,
             platformName,
@@ -93,49 +83,41 @@ export const addUserSubscriptions = async (req, res, next) => {
             },
             billingCycle,
             startDate: parsedStartDate,
-            status, // If not provided, the default 'Active' will be used
-            category, // If not provided, the default 'Other' will be used
-            reminderDaysBefore // If not provided, the default '3' will be used
+            status,
+            category,
+            reminderDaysBefore
         });
 
-        // Save the new subscription to the database
         const savedSubscription = await newSubscription.save();
 
-        res.status(200)
-            .json(
-                new ApiResponse(200, {
-                    data: savedSubscription
-                }
-                    , "Subscription Saved Sucessfully")
-            )
-
+        res.status(201).json(
+            new ApiResponse(201, { subscription: savedSubscription }, "Subscription saved successfully")
+        );
     } catch (error) {
-        console.log("Unable to add the data to DB ", error);
-        next(new ApiError(404, "Unable to add the data to DB "));
+        console.error("Unable to add subscription", error);
+        next(new ApiError(500, "Unable to add subscription"));
     }
 };
 
 export const editUserSubscription = async (req, res, next) => {
     try {
-
         const { id: subscriptionId } = req.params;
         const { _id: userId } = req.user;
-
-        const updateData = req.body;
 
         const subscription = await Subscription.findById(subscriptionId);
 
         if (!subscription) {
-            throw new ApiError(404, 'Subscription not found.')
+            throw new ApiError(404, "Subscription not found");
         }
-
 
         if (subscription.userId.toString() !== userId.toString()) {
-            throw new ApiError(403, 'Forbidden: You do not have permission to edit this subscription.')
+            throw new ApiError(403, "Forbidden: You cannot edit this subscription");
         }
 
+        const updateData = req.body;
+
         Object.keys(updateData).forEach(key => {
-            if (key === 'price' && typeof updateData.price === 'object') {
+            if (key === "price" && typeof updateData.price === "object") {
                 subscription.price = { ...subscription.price, ...updateData.price };
             } else {
                 subscription[key] = updateData[key];
@@ -144,12 +126,12 @@ export const editUserSubscription = async (req, res, next) => {
 
         const updatedSubscription = await subscription.save();
 
-        res.status(200)
-            .json(new ApiResponse(200, { subscription: updatedSubscription }, "Subscription updated sucessfully"));
-
+        res.status(200).json(
+            new ApiResponse(200, { subscription: updatedSubscription }, "Subscription updated successfully")
+        );
     } catch (error) {
-        console.error("Error updating subscription: ", error);
-        next(new ApiError(404, "Error updating subscription: "));
+        console.error("Error updating subscription", error);
+        next(error instanceof ApiError ? error : new ApiError(500, "Unexpected error"));
     }
 };
 
@@ -158,10 +140,6 @@ export const deleteUserSubscription = async (req, res, next) => {
         const { _id: userId } = req.user;
         const { id: subscriptionId } = req.params;
 
-        if (!subscriptionId || !userId) {
-            throw new ApiError(400, "Missing subscriptionId or userId");
-        }
-
         const subscription = await Subscription.findById(subscriptionId);
 
         if (!subscription) {
@@ -169,7 +147,7 @@ export const deleteUserSubscription = async (req, res, next) => {
         }
 
         if (subscription.userId.toString() !== userId.toString()) {
-            throw new ApiError(403, "Forbidden: You do not have permission to delete this subscription.");
+            throw new ApiError(403, "Forbidden: You cannot delete this subscription");
         }
 
         await Subscription.deleteOne({ _id: subscriptionId });
@@ -178,24 +156,25 @@ export const deleteUserSubscription = async (req, res, next) => {
             new ApiResponse(200, null, "Subscription deleted successfully")
         );
     } catch (error) {
-        console.log("Unable to delete the user ", error)
-        next(new ApiError(404, "Unable to delete the user "));
+        console.error("Unable to delete subscription", error);
+        next(new ApiError(500, "Unable to delete subscription"));
     }
 };
 
-export const markSubsCriptionAsDone = async (req, res, next) => {
+export const markSubscriptionAsDone = async (req, res, next) => {
     try {
-        const { id: subscriptionId, paidDate } = req.params;
+        const { id: subscriptionId } = req.params;
         const { _id: userId } = req.user;
-
-        if (!subscriptionId || !userId) {
-            throw new ApiError(400, "Missing subscriptionId or userId");
-        }
+        const { paidDate } = req.body; // <-- moved to body
 
         const subscription = await Subscription.findById(subscriptionId);
 
         if (!subscription) {
             throw new ApiError(404, "Subscription not found");
+        }
+
+        if (subscription.userId.toString() !== userId.toString()) {
+            throw new ApiError(403, "Forbidden: You cannot update this subscription");
         }
 
         await subscription.markAsPaid(paidDate);
@@ -204,7 +183,7 @@ export const markSubsCriptionAsDone = async (req, res, next) => {
             new ApiResponse(200, { subscription }, "Subscription marked as paid successfully")
         );
     } catch (error) {
-        console.error("Error marking subscription as paid: ", error);
+        console.error("Error marking subscription as paid", error);
         next(new ApiError(500, "Error marking subscription as paid"));
     }
 };
