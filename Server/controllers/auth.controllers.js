@@ -138,18 +138,11 @@ export const googleAuthCallback = async (req, res, next) => {
 
         const options = { httpOnly: true, secure: true };
 
-        const createdUser = await User.findById(user._id).select("-password -refreshToken");
+        res.cookie("accessToken", accessToken, options);
+        res.cookie("refreshToken", refreshToken, options);
 
-        return res.status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
-            .json(
-                new ApiResponse(
-                    200,
-                    { user: createdUser, accessToken, refreshToken },
-                    "Google login successful"
-                )
-            );
+        // instead of sending JSON, redirect to frontend app
+        return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
     } catch (error) {
         console.error("Google Auth Callback Error:", error);
         next(new ApiError(500, "Something went wrong while Google login"));
@@ -166,18 +159,11 @@ export const githubAuthCallback = async (req, res, next) => {
 
         const options = { httpOnly: true, secure: true };
 
-        const createdUser = await User.findById(user._id).select("-password -refreshToken");
+        res.cookie("accessToken", accessToken, options);
+        res.cookie("refreshToken", refreshToken, options);
 
-        return res.status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
-            .json(
-                new ApiResponse(
-                    200,
-                    { user: createdUser, accessToken, refreshToken },
-                    "GitHub login successful"
-                )
-            );
+        // instead of sending JSON, redirect to frontend app
+        return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
     } catch (error) {
         console.error("GitHub callback error:", error);
         next(new ApiError(500, "Something went wrong while github login"));

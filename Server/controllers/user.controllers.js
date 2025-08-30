@@ -10,9 +10,9 @@ export const getUserSubscriptions = async (req, res, next) => {
             .sort({ nextBillingDate: 1 })
             .lean();
 
-        if (!subscriptions || subscriptions.length === 0) {
-            throw new ApiError(404, "No subscriptions found");
-        }
+        // if (!subscriptions || subscriptions.length === 0) {
+        //     throw new ApiError(404, "No subscriptions found");
+        // }
 
         return res
             .status(200)
