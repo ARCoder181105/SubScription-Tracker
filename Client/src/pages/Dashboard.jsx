@@ -7,6 +7,7 @@ import Navbar from '../components/Navbar';
 import SubscriptionCard from '../components/SubscriptionCard';
 import StatsCards from '../components/StatsCards';
 import LoadingSpinner from '../components/LoadingSpinner';
+import UserProfileCard from '../components/UserProfileCard';
 
 const Dashboard = () => {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -89,6 +90,10 @@ const Dashboard = () => {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <UserProfileCard/>
+
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>

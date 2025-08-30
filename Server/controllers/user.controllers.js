@@ -1,6 +1,7 @@
 import { ApiError } from '../utils/ApiError.js'
 import { ApiResponse } from '../utils/ApiResponse.js'
 import { Subscription } from '../models/subscription.models.js'
+import { User } from '../models/user.models.js';
 
 export const getUserSubscriptions = async (req, res, next) => {
     try {
@@ -187,3 +188,25 @@ export const markSubsCriptionAsDone = async (req, res, next) => {
         next(new ApiError(500, "Error marking subscription as paid"));
     }
 };
+
+export const getUserProfile = async (req, res, next) => {
+    try {
+        const { _id: userId } = req.user;
+
+        // Example: Find user by userId (you can adjust logic as needed)
+        const user = await User.findOne({ _id: userId }).select('-password -googleId -githubId -refreshToken -__v');
+
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        // console.log( new ApiResponse(200, { user: user }, "User profile fetched successfully"));
+
+        res.status(200).json(
+            new ApiResponse(200, { user: user }, "User profile fetched successfully")
+        );
+    } catch (error) {
+        console.error("Error fetching user profile", error);
+        next(error instanceof ApiError ? error : new ApiError(500, "Unexpected error"));
+    }
+}
