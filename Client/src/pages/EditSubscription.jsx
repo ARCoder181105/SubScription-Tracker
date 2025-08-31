@@ -25,6 +25,7 @@ const EditSubscription = () => {
   const { addToast } = useToast();
   const { authenticatedFetch } = useAuth();
   const navigate = useNavigate();
+    const API_BASE = import.meta.env.VITE_BACKEND_URL;
 
   const currencies = ['INR', 'USD', 'EUR', 'GBP', 'JPY'];
   const billingCycles = ['Weekly', 'Monthly', 'Quarterly', 'Yearly'];
@@ -75,7 +76,7 @@ const EditSubscription = () => {
     setSaving(true);
 
     try {
-      const response = await authenticatedFetch(`/api/v1/user/subs/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE}/api/v1/user/subs/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'

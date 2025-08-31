@@ -15,7 +15,7 @@ const Dashboard = () => {
   const [filter, setFilter] = useState('all');
   const { addToast } = useToast();
   const { authenticatedFetch } = useAuth();
-
+    const API_BASE = import.meta.env.VITE_BACKEND_URL;
   useEffect(() => {
     console.log("Fetching subscriptions...");
     fetchSubscriptions();
@@ -23,7 +23,7 @@ const Dashboard = () => {
 
   const fetchSubscriptions = async () => {
     try {
-      const response = await authenticatedFetch('/api/v1/user/home');
+      const response = await authenticatedFetch(`/api/v1/user/home`);
 
       if (response.ok) {
         const data = await response.json();
