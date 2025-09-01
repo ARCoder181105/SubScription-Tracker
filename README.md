@@ -49,7 +49,7 @@ A full-stack web application for tracking and managing your subscriptions with a
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **React 18** - Modern React with hooks
+- **React 19** - Modern React with hooks
 - **Vite** - Fast build tool and development server
 - **Tailwind CSS** - Utility-first CSS framework
 - **Lucide React** - Beautiful icon library
